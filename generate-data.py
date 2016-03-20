@@ -45,6 +45,17 @@ def macros_barchart(data):
     figure = go.Figure(data=total_data, layout=layout)
     plotly.offline.plot(figure, filename='graphs/stacked-bar-macros.html')
 
+def total_calories_chart(data):
+    x_axis = []
+    y_axis = []
+
+    for d in data:
+        x_axis.append(d.date)
+        y_axis.append(d.totals['calories'])
+
+    data = [go.Scatter(x=x_axis, y=y_axis)]
+    plotly.offline.plot(data, filename='graphs/calories-series.html')
+
 def weight_chart(weight):
     x_axis = weight.keys()
     y_axis = weight.values()
@@ -77,11 +88,17 @@ def get_login():
             print exc
             exit(1)
 
+def generate_charts(data, body_weights):
+    macros_barchart(data)
+    total_calories_chart(data)
+    #weight_chart(body_weights)
+
 def main():
     login_info = get_login()
     #start_date = date(2013, 8, 31) # original start date on MFP
-    start_date = date(2013, 7, 28) # first weight record, no meals
-    #start_date = date(2016, 3, 13)
+    #start_date = date(2013, 7, 28) # first weight record, no meals
+
+    start_date = date(2016, 3, 13)
 
     client = myfitnesspal.Client(login_info['username'], login_info['password'])
 
@@ -89,8 +106,7 @@ def main():
 
     data = get_data(client, start_date)
 
-    macros_barchart(data)
-    weight_chart(body_weights)
+    generate_charts(data, body_weights)
 
 if __name__ == '__main__':
     main()
