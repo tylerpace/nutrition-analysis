@@ -17,3 +17,4 @@ Install with pip or whatever you pythonistas use :)
 
 - myfitnesspal
 - pyyaml
+- plotly
