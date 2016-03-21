@@ -116,7 +116,7 @@ def weights_vs_cals_chart(data, weight):
                 tickfont=dict(color='rgb(148, 103, 189)'),
                 overlaying='y',
                 side='right'))
-    figure = go.Figure(total_data, layout=layout)
+    figure = go.Figure(data=total_data, layout=layout)
     plotly.offline.plot(figure, filename='graphs/weight-cals-series.html')
 
 def get_data(mfp_client, start_date):
@@ -175,7 +175,7 @@ def main():
     #start_date = date(2013, 8, 31) # original start date on MFP
     #start_date = date(2013, 7, 28) # first weight record, no meals
 
-    start_date = date(2015, 12, 1)
+    start_date = date(2015, 1, 1)
 
     print "Logging in as " + login_info['username'] + "..."
     client = myfitnesspal.Client(login_info['username'], login_info['password'])
