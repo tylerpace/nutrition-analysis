@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import csv
 import myfitnesspal
 import plotly
 import plotly.graph_objs as go
@@ -153,6 +154,20 @@ def get_data(mfp_client, start_date):
 
     return data
 
+def get_lifts(path):
+    f = open(path, 'rb')
+    column = 0
+    d = {}
+
+    try:
+        reader = csv.reader(f, delimiter=',', quotechar='|')
+        date = ''
+        for row in reader:
+            print ', '.join(row)
+            column++
+    finally:
+        f.close()
+
 def get_login():
     with open("login.yaml", "r") as stream:
         try:
@@ -183,6 +198,8 @@ def main():
 
     body_weights = client.get_measurements('Weight', start_date)
     data = get_data(client, start_date)
+
+    #deadlift_data = get_lifts("training/deadlifts.csv")
 
     generate_charts(data, body_weights)
 
