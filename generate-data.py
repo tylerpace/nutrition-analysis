@@ -102,33 +102,54 @@ def weights_vs_cals_chart(data, weight):
     weights = go.Scatter(
             x = x_weight,
             y = y_weight,
-            name = 'Total weight',
+            name = 'Body Weight',
             yaxis = 'y2')
 
-    total_data = [calories, weights]
+    total_data = [calories,weights]
 
     layout = go.Layout(
             title = 'Weight vs Calories over time',
             yaxis = dict(title='Calories'),
             yaxis2 = dict(
-                title = 'Weight',
-                titlefont = dict(color='rgb(148, 103, 189)'),
-                tickfont = dict(color='rgb(148, 103, 189)'),
-                overlaying = 'y',
-                side = 'right'))
-    plotly.offline.plot(total_data, filename='graphs/weight-cals-series.html')
+                title='Body Weight',
+                titlefont=dict(color='rgb(148, 103, 189)'),
+                tickfont=dict(color='rgb(148, 103, 189)'),
+                overlaying='y',
+                side='right'))
+    figure = go.Figure(total_data, layout=layout)
+    plotly.offline.plot(figure, filename='graphs/weight-cals-series.html')
 
 def get_data(mfp_client, start_date):
     d1 = start_date
     d2 = date.today()
     delta = d2 - d1
     data = []
+    missed_dates = []
 
     print "Retrieving data from myfitnesspal....this will take a while...\n"
     for i in range(delta.days + 1):
-        print "Getting date " + str(d1 + timedelta(days=i)) + " . . ."
-        mfp_data = mfp_client.get_date(d1 + timedelta(days=i))
+        local_date = d1 + timedelta(days=i)
+        print "Getting date " + str(local_date) + " . . ."
+
+        # terribad try/catch because the myfitnesspal api is super unstable
+        try:
+            mfp_data = mfp_client.get_date(local_date)
+        except IndexError as e:
+            print e
+            print "Could not get date . . . continuing anyway . . ."
+            missed_dates.append(local_date)
+            continue
+        except:
+            print "Something went wrong :("
+            raise
+
         data.append(mfp_data)
+
+    if len(missed_dates) > 0:
+        print
+        print "Could not get information for these dates:"
+        print missed_dates
+        print
 
     return data
 
@@ -154,7 +175,7 @@ def main():
     #start_date = date(2013, 8, 31) # original start date on MFP
     #start_date = date(2013, 7, 28) # first weight record, no meals
 
-    start_date = date(2015, 3, 15)
+    start_date = date(2015, 12, 1)
 
     print "Logging in as " + login_info['username'] + "..."
     client = myfitnesspal.Client(login_info['username'], login_info['password'])
