@@ -85,10 +85,8 @@ def weight_chart(weight):
     data = [go.Scatter(x=x_axis, y=y_axis)]
     plotly.offline.plot(data, filename='graphs/weight-series.html')
 
-def weights_vs_cals_chart(data, weight, deadlift_data, bench_data, squat_data):
+def lifting_vs_weight_chart(weight, deadlift_data, bench_data, squat_data):
     # https://plot.ly/python/multiple-axes/
-    x_cals = []
-    y_cals = []
     x_weight = weight.keys()
     y_weight = weight.values()
 
@@ -111,6 +109,68 @@ def weights_vs_cals_chart(data, weight, deadlift_data, bench_data, squat_data):
         x_bench.append(d)
         y_bench.append(bench_data[d])
 
+    weights = go.Scatter(
+            x = x_weight,
+            y = y_weight,
+            name = 'Body Weight')
+
+    deadlifts = go.Scatter(
+            x = x_deadlift,
+            y = y_deadlift,
+            name = 'Deadlift Top Sets',
+            yaxis = 'y2')
+
+    benches = go.Scatter(
+            x = x_bench,
+            y = y_bench,
+            name = 'Bench Top Sets',
+            yaxis = 'y3')
+
+    squats = go.Scatter(
+            x = x_squat,
+            y = y_squat,
+            name = 'Squat Top Sets',
+            yaxis = 'y4')
+
+    total_data = [weights,deadlifts,benches,squats]
+
+    layout = go.Layout(
+            title = 'Weight vs Powerlifting over time',
+            yaxis = dict(title='Body Weight',
+                         titlefont=dict(color='#1f77b4'),
+                         tickfont=dict(color='#1f77b4')),
+            yaxis2 = dict(
+                title='Deadlift Top Sets',
+                titlefont=dict(color='#ff7f0e'),
+                tickfont=dict(color='#ff7f0e'),
+                overlaying='y',
+                side='left',
+                position=0.05),
+            yaxis3 = dict(
+                title='Bench Top Sets',
+                titlefont=dict(color='#d62728'),
+                tickfont=dict(color='#d62728'),
+                anchor='free',
+                overlaying='y',
+                side='right',
+                position=0.95),
+            yaxis4 = dict(
+                title='Squat Top Sets',
+                titlefont=dict(color='#9467bd'),
+                tickfont=dict(color='#9467bd'),
+                anchor='x',
+                overlaying='y',
+                side='right'))
+    figure = go.Figure(data=total_data, layout=layout)
+    plotly.offline.plot(figure, filename='graphs/weight-lift-series.html')
+
+def weights_vs_cals_chart(data, weight):
+    # https://plot.ly/python/multiple-axes/
+    x_cals = []
+    y_cals = []
+    x_weight = weight.keys()
+    y_weight = weight.values()
+
     for d in data:
         x_cals.append(d.date)
         y_cals.append(d.totals['calories'])
@@ -126,28 +186,10 @@ def weights_vs_cals_chart(data, weight, deadlift_data, bench_data, squat_data):
             name = 'Body Weight',
             yaxis = 'y2')
 
-    deadlifts = go.Scatter(
-            x = x_deadlift,
-            y = y_deadlift,
-            name = 'Deadlift Top Sets',
-            yaxis = 'y3')
-
-    benches = go.Scatter(
-            x = x_bench,
-            y = y_bench,
-            name = 'Bench Top Sets',
-            yaxis = 'y4')
-
-    squats = go.Scatter(
-            x = x_squat,
-            y = y_squat,
-            name = 'Squat Top Sets',
-            yaxis = 'y5')
-
-    total_data = [calories,weights,deadlifts,benches,squats]
+    total_data = [calories,weights]
 
     layout = go.Layout(
-            title = 'Weight vs Calories vs Powerlifting over time',
+            title = 'Weight vs Calories over time',
             yaxis = dict(title='Calories'),
             yaxis2 = dict(
                 title='Body Weight',
@@ -155,29 +197,7 @@ def weights_vs_cals_chart(data, weight, deadlift_data, bench_data, squat_data):
                 tickfont=dict(color='rgb(148, 103, 189)'),
                 overlaying='y',
                 side='right',
-                position=.95),
-            yaxis3 = dict(
-                title='Deadlift Top Sets',
-                titlefont=dict(color='#d62728'),
-                tickfont=dict(color='#d62728'),
-                anchor='x',
-                overlaying='y',
-                side='left'),
-            yaxis4 = dict(
-                title='Bench Top Sets',
-                titlefont=dict(color='#9467bd'),
-                tickfont=dict(color='#9467bd'),
-                anchor='x',
-                overlaying='y',
-                side='left',
-                position=0.85),
-            yaxis5 = dict(
-                title='Squat Top Sets',
-                titlefont=dict(color='#9467bd'),
-                tickfont=dict(color='#9467bd'),
-                anchor='x',
-                overlaying='y',
-                side='right'))
+                position=.95))
     figure = go.Figure(data=total_data, layout=layout)
     plotly.offline.plot(figure, filename='graphs/weight-cals-series.html')
 
@@ -225,7 +245,6 @@ def get_lifts(path):
         date = ''
         for row in reader:
             date = datetime.strptime(row[1], "%Y-%m-%d").strftime("%Y-%m-%d")
-            print row[3]
             weight = float(row[3])
             if date in d:
                 if d[date] < weight:
@@ -236,8 +255,6 @@ def get_lifts(path):
     finally:
         f.close()
 
-    for day in sorted(d):
-        print day + " " + d[day]
     return d
 
 def get_login():
@@ -253,29 +270,29 @@ def generate_charts(data, body_weights, deadlift_data, bench_data, squat_data):
     print "Generating charts . . ."
     macros_barchart(data)
     total_calories_chart(data)
-    weights_vs_cals_chart(data, body_weights, deadlift_data, bench_data, squat_data)
+    weights_vs_cals_chart(data, body_weights)
+    lifting_vs_weight_chart(body_weights, deadlift_data, bench_data, squat_data)
     weight_chart(body_weights)
     macros_piechart(data)
 
 def main():
     login_info = get_login()
     #start_date = date(2013, 8, 31) # original start date on MFP
-    #start_date = date(2013, 7, 28) # first weight record, no meals
+    start_date = date(2013, 7, 28) # first weight record, no meals
+    #start_date = date(2016, 3, 1) # test date
 
-    start_date = date(2016, 3, 1)
+    print "Logging in as " + login_info['username'] + "..."
+    client = myfitnesspal.Client(login_info['username'], login_info['password'])
+    print "Done!"
 
-    #print "Logging in as " + login_info['username'] + "..."
-    #client = myfitnesspal.Client(login_info['username'], login_info['password'])
-    #print "Done!"
+    body_weights = client.get_measurements('Weight', start_date)
+    data = get_data(client, start_date)
 
-    #body_weights = client.get_measurements('Weight', start_date)
-    #data = get_data(client, start_date)
-
-    #deadlift_data = get_lifts("training/deadlifts.csv")
-    #bench_data = get_lifts("training/bench.csv")
+    deadlift_data = get_lifts("training/deadlifts.csv")
+    bench_data = get_lifts("training/bench.csv")
     squat_data = get_lifts("training/squat.csv")
 
-    #generate_charts(data, body_weights, deadlift_data, bench_data, squat_data)
+    generate_charts(data, body_weights, deadlift_data, bench_data, squat_data)
 
 if __name__ == '__main__':
     main()
